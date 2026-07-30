@@ -1,0 +1,46 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.python-version
+
+# --- Environment ---
+.env
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# --- Generated data: everything under data/ is rebuilt by Lab 03 Part A ---
+# (tokenized corpora, logit caches, importance profiles, self-test artifacts)
+data/
+
+# --- Run outputs: checkpoints and tensors are huge and machine-specific.
+# Keep the small JSON receipts (manifests, protocols, predictions, logs) —
+# they are the reproducibility story and belong in a public repo.
+runs/**
+!runs/**/
+!runs/**/*.json
+!runs/**/REPORT.md
+
+# --- Model weights & caches, wherever they land ---
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.gguf
+*.npy
+.cache/
+.huggingface/
+hf_cache/
+wandb/
+
+# --- OS / editor noise ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
