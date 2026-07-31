@@ -153,6 +153,15 @@ Nothing more.
 - [x] `code/kd_pipeline.py`: the Tier 2 engineering layer. Memory plans, bandwidth/KV
       arithmetic, the top-k cache writer/reader with corpus fingerprinting, the entropy
       monitor, the ULD loss, run manifests. Each piece is asserted by the labs' Part A cells.
+- [x] **Solutions, all 13 labs.** One notebook per lab in `solutions/`, solving every
+      exercise with the approach explained before the code. Exercises answerable without
+      training were executed live (all of Labs 00 to 02, and the measurement/mechanism parts
+      of the rest); exercises that need real training carry full working code behind the same
+      `RUN_TRAINING` flag with expected ranges. A few solutions surfaced genuine findings:
+      the library's `seq_kd=True` path is dead code at `lmbda=1.0` (it needs `lmbda=0.0`),
+      and a couple of the exercises' premises got honestly refuted by the data rather than
+      forced. Try each exercise before opening its solution; the format rules live in
+      `SOLUTIONS_SPEC.md`.
 - **Run order on the box:** Lab 03 Part A builds the shared corpus the later labs reuse. After
   that, labs are independent per the artifact chain in `ROADMAP.md`.
 - **A note on drift:** the Tooling paragraph below describes TRL's distillation surface as I
@@ -207,6 +216,7 @@ ModelDistillation/
   code/kd_core.py           the primitives, library-agnostic, [B,T,V] in
   code/kd_pipeline.py       the Tier 2 engineering layer
   labs/                     numbered notebooks, 00-12
+  solutions/                worked exercise solutions, one per lab
   figures/                  figures written by executed labs
   data/, runs/              generated on the box; gitignored except JSON receipts
 ```
