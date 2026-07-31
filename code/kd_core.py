@@ -59,8 +59,16 @@ def masked_mean(per_position: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     long and short completions, a per-token mean silently weights the long ones
     more heavily. That is usually what you want for distillation and usually
     not what you want when reporting per-example metrics.
+
+    Masked-out positions are zeroed by selection, not by multiplication. A
+    padded position can legitimately hold inf or NaN (nothing constrains the
+    model's output where nothing is supervised), and 0 * inf is NaN, so
+    multiplying by the mask would let a position you excluded poison the mean.
     """
     m = mask.to(per_position.dtype)
+    per_position = torch.where(mask.bool(), per_position,
+                               torch.zeros((), dtype=per_position.dtype,
+                                           device=per_position.device))
     return (per_position * m).sum() / m.sum().clamp_min(1.0)
 
 
@@ -264,16 +272,25 @@ def topk_forward_kl(
     use_tail=True   treat everything outside the top-k as one aggregate bucket
                     and match the student's total mass on that bucket. Costs
                     one extra term and removes most of the bias.
+
+    Everything here is computed in fp32 regardless of the student's dtype. This
+    is not defensive cargo-culting; the tail term genuinely breaks in bf16. The
+    student's mass on the teacher's top-k routinely exceeds 0.996 on
+    teacher-forced text, bfloat16 has 8 mantissa bits so its resolution near 1.0
+    is about 0.0039, and both that sum and the `1 - 1e-6` clamp bound below
+    round to exactly 1.0. log1p(-1.0) is -inf, the tail term becomes +inf, and
+    the loss is NaN from the first step onward. Casting up front costs one copy
+    of a [B, T, k] tensor and matches what TopKCacheWriter already does.
     """
-    s_log = F.log_softmax(student_logits / T, dim=-1)
-    top_lp, top_idx = cache["topk_logprobs"], cache["topk_idx"]
+    s_log = F.log_softmax(student_logits.float() / T, dim=-1)
+    top_lp, top_idx = cache["topk_logprobs"].float(), cache["topk_idx"]
     s_top = s_log.gather(-1, top_idx)
     if not use_tail:
         p_log = top_lp - torch.logsumexp(top_lp, dim=-1, keepdim=True)
         per_pos = (p_log.exp() * (p_log - s_top)).sum(-1)
     else:
         per_pos = (top_lp.exp() * (top_lp - s_top)).sum(-1)
-        p_tail_log = cache["tail_logprob"]
+        p_tail_log = cache["tail_logprob"].float()
         s_tail_log = torch.log1p(-s_top.exp().sum(-1).clamp(max=1 - 1e-6))
         per_pos = per_pos + p_tail_log.exp() * (p_tail_log - s_tail_log)
     out = masked_mean(per_pos, mask)
