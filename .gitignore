@@ -18,6 +18,9 @@ env/
 # (tokenized corpora, logit caches, importance profiles, self-test artifacts)
 data/
 
+# --- HTML Textbook for site
+textbook/Distilling-Generative-Models.html
+
 # --- Run outputs: checkpoints and tensors are huge and machine-specific.
 # Keep the small JSON receipts (manifests, protocols, predictions, logs) —
 # they are the reproducibility story and belong in a public repo.
@@ -44,3 +47,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# --- Everything else ---
+STYLE_SPEC.md
+SOLUTIONS_SPEC.md
+textbook.html
